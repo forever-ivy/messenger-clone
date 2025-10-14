@@ -1,17 +1,31 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
 import { FieldValues, useForm, SubmitHandler } from "react-hook-form";
 import Input from "@/components/inputs/Input";
 import Button from "@/components/Button";
 import AuthSocialButton from "./AuthSocialButton";
 import { BsGithub, BsGoogle } from "react-icons/bs";
+import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type Variant = "LOGIN" | "REGISTER";
 
 const AuthForm = () => {
+  const session = useSession();
+  const router = useRouter();
   const [variant, setVariant] = useState<Variant>("LOGIN");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (session?.status === "authenticated") {
+      router.push("/users");
+    }
+  }, [session?.status, router]);
+
   const toggleVariant = useCallback(() => {
     if (variant === "LOGIN") {
       setVariant("REGISTER");
@@ -36,14 +50,48 @@ const AuthForm = () => {
     setIsLoading(true);
 
     if (variant === "REGISTER") {
+      axios
+        .post("/api/auth/register", data)
+        .then(() => signIn("credentials", data))
+        .catch(() => toast.error("Something went wrong"))
+        .finally(() => setIsLoading(false));
     }
 
     if (variant === "LOGIN") {
+      signIn("credentials", {
+        ...data,
+        redirect: false,
+      })
+        .then((callback) => {
+          if (callback?.error) {
+            toast.error("Invalid credentials");
+          }
+
+          if (callback?.ok && !callback?.error) {
+            toast.success("Logged in successfully");
+            router.push("/users");
+          }
+        })
+        .finally(() => setIsLoading(false));
     }
   };
 
-  const socialAction = (action: string) => {
+  const socialAction = (action: "github" | "google") => {
     setIsLoading(true);
+    signIn(action, { callbackUrl: "/users", redirect: false })
+      .then((callback) => {
+        if (callback?.error) {
+          toast.error("Unable to sign in. Please try another account.");
+          setIsLoading(false);
+        } else if (callback?.url) {
+          router.push(callback.url);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        toast.error("Unexpected error. Please try again.");
+        setIsLoading(false);
+      });
   };
   return (
     <div
