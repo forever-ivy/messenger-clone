@@ -1,7 +1,7 @@
 "use client";
 
-import { User } from "@prisma/client";
 import UserBox from "./UserBox";
+import { User } from "../../generated/prisma";
 
 interface UserListProps {
   users: User[];
