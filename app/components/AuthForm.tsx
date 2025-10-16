@@ -53,7 +53,22 @@ const AuthForm = () => {
       axios
         .post("/api/auth/register", data)
         .then(() => signIn("credentials", data))
-        .catch(() => toast.error("Something went wrong"))
+        .catch((error) => {
+          if (axios.isAxiosError(error)) {
+            const message =
+              error.response?.data ||
+              (error.response?.status === 409
+                ? "Email already in use"
+                : undefined);
+            toast.error(
+              typeof message === "string"
+                ? message
+                : "Something went wrong. Please try again."
+            );
+          } else {
+            toast.error("Something went wrong. Please try again.");
+          }
+        })
         .finally(() => setIsLoading(false));
     }
 
