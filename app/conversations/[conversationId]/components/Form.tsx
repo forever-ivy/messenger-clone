@@ -7,9 +7,11 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import MessageInput from "./MessageInput";
 import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
 import { CldUploadButton } from "next-cloudinary";
+import { useRouter } from "next/navigation";
 
 const Form = () => {
   const { conversationId } = useConversation();
+  const router = useRouter();
 
   const {
     register,
@@ -24,17 +26,28 @@ const Form = () => {
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setValue("message", "", { shouldValidate: true });
-    axios.post(`/api/messages`, {
-      ...data,
-      conversationId,
-    });
+
+    try {
+      await axios.post(`/api/messages`, {
+        ...data,
+        conversationId,
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("发送消息失败", error);
+    }
   };
 
-  const handleUpload = (result: any) => {
-    axios.post(`/api/messages`, {
-      image: result?.info?.secure_url,
-      conversationId,
-    });
+  const handleUpload = async (result: any) => {
+    try {
+      await axios.post(`/api/messages`, {
+        image: result?.info?.secure_url,
+        conversationId,
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("图片上传消息失败", error);
+    }
   };
 
   return (
@@ -54,7 +67,7 @@ const Form = () => {
     >
       <CldUploadButton
         options={{ maxFiles: 1 }}
-        onUpload={handleUpload}
+        onSuccess={handleUpload}
         uploadPreset="kbdp9mhb"
       >
         <HiPhoto size={30} className="text-sky-500" />

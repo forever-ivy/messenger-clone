@@ -10,9 +10,12 @@ const getConversationById = async (conversationId: string) => {
       return null;
     }
 
-    const conversation = await prisma.conversation.findUnique({
+    const conversation = await prisma.conversation.findFirst({
       where: {
         id: conversationId,
+        userIds: {
+          has: currentUser.id,
+        },
       },
       include: {
         users: true,

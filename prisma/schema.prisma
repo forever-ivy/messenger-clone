@@ -41,7 +41,7 @@ model Account {
   provider          String
   providerAccountId String
   refresh_token     String? @db.String
-  accesss_token     String? @db.String
+  access_token      String? @db.String
   expires_at        Int?
   token_type        String?
   scope             String?
@@ -55,7 +55,7 @@ model Account {
 
 model Conversation {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  createAt      DateTime @default(now())
+  createdAt     DateTime @default(now())
   lastMessageAt DateTime @default(now())
   name          String?
   isGroup       Boolean?

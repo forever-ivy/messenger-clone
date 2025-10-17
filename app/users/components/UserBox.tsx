@@ -5,6 +5,7 @@ import { User } from "@prisma/client";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+import toast from "react-hot-toast";
 
 interface UserBoxProps {
   data: User;
@@ -15,17 +16,24 @@ const UserBox: React.FC<UserBoxProps> = ({ data }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = useCallback(() => {
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
 
     axios
       .post("/api/conversations", {
         userId: data.id,
       })
-      .then(() => {
-        router.push(`/conversations/${data.data.id}`);
+      .then(({ data: conversation }) => {
+        router.push(`/conversations/${conversation.id}`);
+      })
+      .catch(() => {
+        toast.error("无法打开会话，请稍后再试。");
       })
       .finally(() => setIsLoading(false));
-  }, [data, router]);
+  }, [data, isLoading, router]);
 
   return (
     <div
