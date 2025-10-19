@@ -1,3 +1,5 @@
 {
-    "chatgpt.openOnStartup": true
+  "chatgpt.openOnStartup": true,
+  "docwriter.language": "Chinese",
+  "docwriter.progress.trackClasses": true
 }

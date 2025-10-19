@@ -14,32 +14,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// @model User
+/// @description 用户模型，存储应用的所有用户信息
 model User {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  name           String?
-  email          String?   @unique
-  emailVerified  DateTime?
-  image          String?
-  hashedPassword String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId // 用户唯一ID
+  name           String?   // 用户名
+  email          String?   @unique // 用户邮箱，唯一
+  emailVerified  DateTime? // 邮箱验证时间
+  image          String?   // 用户头像URL
+  hashedPassword String?   // 哈希后的密码
+  createdAt      DateTime  @default(now()) // 账户创建时间
+  updatedAt      DateTime  @updatedAt // 账户更新时间
 
+  // --- 关系 ---
+  // 与Conversation的多对多关系
   conversationIds String[]       @db.ObjectId
   conversations   Conversation[] @relation(fields: [conversationIds], references: [id])
 
+  // 与Message的多对多关系（用于记录已读消息）
   seenMessageIds String[]  @db.ObjectId
   seenMessages   Message[] @relation("Seen", fields: [seenMessageIds], references: [id])
 
+  // 与Account的一对多关系
   accounts Account[]
+  // 与Message的一对多关系（作为发送者）
   messages Message[]
 }
 
+/// @model Account
+/// @description 账户模型，用于支持多种登录方式（如OAuth）
 model Account {
-  id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String  @db.ObjectId
-  type              String
-  provider          String
-  providerAccountId String
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId // 账户唯一ID
+  userId            String  @db.ObjectId // 关联的User ID
+  type              String  // 账户类型 (e.g. "oauth", "email")
+  provider          String  // 提供商 (e.g. "google", "github")
+  providerAccountId String  // 提供商侧的用户ID
   refresh_token     String? @db.String
   access_token      String? @db.String
   expires_at        Int?
@@ -48,37 +57,51 @@ model Account {
   id_token          String? @db.String
   session_state     String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // --- 关系 ---
+  // 与User的多对一关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 如果用户被删除，关联的账户也会被删除
 
+  // 确保provider和providerAccountId的组合是唯一的
   @@unique([provider, providerAccountId])
 }
 
+/// @model Conversation
+/// @description 对话模型，可以是一对一聊天或群聊
 model Conversation {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt     DateTime @default(now())
-  lastMessageAt DateTime @default(now())
-  name          String?
-  isGroup       Boolean?
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId // 对话唯一ID
+  createdAt     DateTime @default(now()) // 对话创建时间
+  lastMessageAt DateTime @default(now()) // 最后一条消息的发送时间，用于排序
+  name          String?  // 对话名称（主要用于群聊）
+  isGroup       Boolean? // 是否为群聊
 
+  // --- 关系 ---
+  // 与Message的一对多关系
   messageIds String[]  @db.ObjectId
   messages   Message[]
 
+  // 与User的多对多关系
   userIds String[] @db.ObjectId
   users   User[]   @relation(fields: [userIds], references: [id])
 }
 
+/// @model Message
+/// @description 消息模型，存储单条消息内容
 model Message {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  body      String?
-  image     String?
-  createdAt DateTime @default(now())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId // 消息唯一ID
+  body      String?  // 消息文本内容
+  image     String?  // 图片消息的URL
+  createdAt DateTime @default(now()) // 消息创建时间
 
+  // --- 关系 ---
+  // 与User的多对多关系（用于记录已读用户）
   seenIds String[] @db.ObjectId
   seen    User[]   @relation("Seen", fields: [seenIds], references: [id])
 
-  conversationId String       @db.ObjectId
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  // 与Conversation的多对一关系
+  conversationId String       @db.ObjectId // 关联的Conversation ID
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade) // 如果对话被删除，关联的消息也会被删除
 
-  senderId String @db.ObjectId
-  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  // 与User的多对一关系（发送者）
+  senderId String @db.ObjectId // 关联的发送者User ID
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade) // 如果发送者被删除，其发送的消息也会被删除
 }
