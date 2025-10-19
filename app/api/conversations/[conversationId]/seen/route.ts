@@ -40,30 +40,38 @@ export async function POST(
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    const lastMessage = conversation.messages[0];
+    const unseenMessages = conversation.messages.filter(
+      (message) =>
+        !message.seen.some((user) => user.id === currentUser.id) &&
+        message.sender.id !== currentUser.id
+    );
 
-    if (!lastMessage) {
-      return NextResponse.json(null);
+    if (unseenMessages.length === 0) {
+      return NextResponse.json([]);
     }
 
-    const updatedMessage = await prisma.message.update({
-      where: {
-        id: lastMessage.id,
-      },
-      data: {
-        seen: {
-          connect: {
-            id: currentUser.id,
+    const updatedMessages = await Promise.all(
+      unseenMessages.map((message) =>
+        prisma.message.update({
+          where: {
+            id: message.id,
           },
-        },
-      },
-      include: {
-        seen: true,
-        sender: true,
-      },
-    });
+          data: {
+            seen: {
+              connect: {
+                id: currentUser.id,
+              },
+            },
+          },
+          include: {
+            seen: true,
+            sender: true,
+          },
+        })
+      )
+    );
 
-    return NextResponse.json(updatedMessage);
+    return NextResponse.json(updatedMessages);
   } catch (error: any) {
     console.log(error, "CONVERSATION_SEEN_ERROR");
     return new NextResponse("Internal Error", { status: 500 });

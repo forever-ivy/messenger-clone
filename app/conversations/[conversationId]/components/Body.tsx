@@ -31,17 +31,24 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
     }
 
     axios
-      .post<FullMessageType | null>(`/api/conversations/${conversationId}/seen`)
+      .post<FullMessageType[]>(`/api/conversations/${conversationId}/seen`)
       .then((response) => {
-        const updatedMessage = response.data;
+        const updatedMessages = response.data;
 
-        if (updatedMessage) {
-          setMessages((current) =>
-            current.map((message) =>
-              message.id === updatedMessage.id ? updatedMessage : message
-            )
-          );
+        if (updatedMessages.length > 0) {
+          setMessages((current) => {
+            const updatesById = new Map(
+              updatedMessages.map((message) => [message.id, message])
+            );
+
+            return current.map((message) =>
+              updatesById.has(message.id)
+                ? updatesById.get(message.id)!
+                : message
+            );
+          });
         }
+
         router.refresh();
       })
       .catch((error) => {

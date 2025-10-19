@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-import { useState } from "react";
 import { FullConversationType } from "@/app/types";
 import { useRouter } from "next/navigation";
 import useConversation from "@/app/hooks/useConversation";
@@ -13,11 +11,7 @@ interface ConversationListProps {
   initialItems: FullConversationType[];
 }
 
-const ConversationList: React.FC<ConversationListProps> = ({
-  initialItems,
-}) => {
-  const [items, setItems] = useState(initialItems);
-
+const ConversationList: React.FC<ConversationListProps> = ({ initialItems }) => {
   const router = useRouter();
 
   const { conversationId, isOpen } = useConversation();
@@ -36,7 +30,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <MdOutlineGroupAdd size={20} />
           </div>
         </div>
-        {items.map((item) => (
+        {initialItems.map((item) => (
           <ConversationBox
             key={item.id}
             data={item}
