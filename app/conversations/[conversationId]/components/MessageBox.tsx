@@ -5,7 +5,9 @@ import Avatar from "@/components/Avatar";
 import clsx from "clsx";
 import { format } from "date-fns";
 import Image from "next/image";
+import ImageModal from "./ImageModal";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 interface MessageBoxProps {
   data: FullMessageType;
@@ -14,6 +16,7 @@ interface MessageBoxProps {
 
 const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
   const session = useSession();
+  const [imageModalOpen, setImageModalOpen] = useState(false);
 
   const isOwn = session?.data?.user?.email === data?.sender?.email;
   const seenList = (data?.seen || [])
@@ -27,7 +30,12 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
         <Avatar user={data.sender} />
         <div className={clsx("flex flex-col gap-2", isOwn ? "items-end" : "")}>
           <div className="flex items-center gap-2">
-            <div className={clsx("text-sm text-gray-500", isOwn ? "text-right" : "text-left")}>
+            <div
+              className={clsx(
+                "text-sm text-gray-500",
+                isOwn ? "text-right" : "text-left"
+              )}
+            >
               {data.sender.name}
             </div>
             <div className="text-xs text-gray-400">
@@ -41,6 +49,13 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
               data.image ? "rounded-md p-0" : "py-2 px-3 rounded-lg"
             )}
           >
+            <ImageModal
+              src={data.image}
+              isOpen={imageModalOpen}
+              onClose={() => {
+                setImageModalOpen(false);
+              }}
+            />
             {data.image ? (
               <div className="relative h-64 w-64">
                 <Image
@@ -49,6 +64,9 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
                   alt="Image"
                   sizes="256px"
                   className="object-cover rounded-md"
+                  onClick={() => {
+                    setImageModalOpen(true);
+                  }}
                 />
               </div>
             ) : (
@@ -56,7 +74,9 @@ const MessageBox: React.FC<MessageBoxProps> = ({ data, isLast }) => {
             )}
           </div>
           {isLast && isOwn && seenList && (
-            <div className="text-xs font-light text-gray-500">Seen by {seenList}</div>
+            <div className="text-xs font-light text-gray-500">
+              Seen by {seenList}
+            </div>
           )}
         </div>
       </div>

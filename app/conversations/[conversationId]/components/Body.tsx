@@ -6,6 +6,8 @@ import MessageBox from "./MessageBox";
 import useConversation from "@/app/hooks/useConversation";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { pusherClient } from "@/app/libs/pusher";
+import find from "lodash/find";
 
 interface BodyProps {
   initialMessages: FullMessageType[];
@@ -55,6 +57,32 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
         console.error("更新已读状态失败", error);
       });
   }, [conversationId, router]);
+
+  useEffect(() => {
+    pusherClient.subscribe(conversationId);
+    bottomRef?.current?.scrollIntoView();
+
+    const messageHandler = (message: FullMessageType) => {
+      axios.post<FullMessageType[]>(
+        `/api/conversations/${conversationId}/seen`
+      );
+      setMessages((current) => {
+        if (find(current, { id: message.id })) {
+          return current;
+        }
+        return [message, ...current];
+      });
+
+      bottomRef?.current?.scrollIntoView();
+    };
+
+    pusherClient.bind("messages:new", messageHandler);
+
+    return () => {
+      pusherClient.unsubscribe(conversationId);
+      pusherClient.unbind("messages:new", messageHandler);
+    };
+  });
 
   return (
     <div className="flex-1 overflow-y-auto">
