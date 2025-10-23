@@ -5,6 +5,7 @@ import ToasterContext from "./context/ToasterContext";
 import AuthContext from "./context/AuthContext";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
+import ActiveStatus from "./components/ActiveStatus";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,6 +34,7 @@ export default async function RootLayout({
       <body className={`${inter.variable} ${robotoMono.variable} antialiased`}>
         <AuthContext session={session}>
           <ToasterContext />
+          <ActiveStatus/>
           {children}
         </AuthContext>
       </body>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/app/libs/prismadb";
+import { pusherServer } from "@/app/libs/pusher";
 
 /**
  * @swagger
@@ -82,6 +83,8 @@ export async function POST(
       return new NextResponse("Not Found", { status: 404 });
     }
 
+    const lastMessage = conversation.messages[conversation.messages.length - 1];
+
     // 5. 筛选出当前用户未读的消息
     const unseenMessages = conversation.messages.filter(
       (message) =>
@@ -118,6 +121,21 @@ export async function POST(
           },
         })
       )
+    );
+
+    await pusherServer.trigger(currentUser.email, "conversation:update", {
+      id: conversationId,
+      messages: [updatedMessages],
+    });
+
+    if (lastMessage.seenIds.indexOf(currentUser.id) !== -1) {
+      return NextResponse.json(conversation.messages);
+    }
+
+    await pusherServer.trigger(
+      conversationId,
+      "message:update",
+      updatedMessages
     );
 
     // 8. 返回所有被更新的消息

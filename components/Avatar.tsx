@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 "use client";
 
-import { User } from "@prisma/client";
+import { User } from "@/app/generated/prisma";
+import useActiveList from "@/app/hooks/useActiveList";
 import Image from "next/image";
 
 interface AvatarProps {
@@ -8,6 +10,9 @@ interface AvatarProps {
 }
 
 const Avatar = ({ user }: AvatarProps) => {
+  const { members } = useActiveList();
+  const isActive = members.indexOf(user?.email!) !== -1;
+
   return (
     <div className="relative">
       <div
@@ -30,7 +35,9 @@ const Avatar = ({ user }: AvatarProps) => {
           className="object-cover"
         />
       </div>
-      <span className=" absolute block rounded-full bg-green-500 ring-2 ring-white top-0 right-0 h-2 w-2 md:h-3 md:w-3" />
+      {isActive && (
+        <span className=" absolute block rounded-full bg-green-500 ring-2 ring-white top-0 right-0 h-2 w-2 md:h-3 md:w-3" />
+      )}
     </div>
   );
 };

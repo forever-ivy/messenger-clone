@@ -76,11 +76,24 @@ const Body: React.FC<BodyProps> = ({ initialMessages }) => {
       bottomRef?.current?.scrollIntoView();
     };
 
+    const updateMessageHandler = (newMessage: FullMessageType) => {
+      setMessages((current) => {
+        return current.map((currentMessage) => {
+          if (currentMessage.id === newMessage.id) {
+            return newMessage;
+          }
+          return currentMessage;
+        });
+      });
+    };
+
     pusherClient.bind("messages:new", messageHandler);
+    pusherClient.bind("messages:update", messageHandler);
 
     return () => {
       pusherClient.unsubscribe(conversationId);
       pusherClient.unbind("messages:new", messageHandler);
+      pusherClient.unbind("messages:update", updateMessageHandler);
     };
   });
 
