@@ -2,8 +2,10 @@
 
 import useRoutes from "@/app/hooks/useRoutes";
 import DesktopItem from "./DesktopItem";
-import { User } from "@/app/generated/prisma";
+import type { User } from "@prisma/client";
 import Avatar from "@/components/Avatar";
+import { useState } from "react";
+import SettingsModal from "@/components/SettingsModal";
 
 interface DesktopSidebarProps {
   currentUser?: User | null;
@@ -11,6 +13,7 @@ interface DesktopSidebarProps {
 
 const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ currentUser }) => {
   const routes = useRoutes();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <div
@@ -31,6 +34,13 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ currentUser }) => {
     justify-between
     "
     >
+      {currentUser && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          currentUser={currentUser}
+        />
+      )}
       <nav className="mt-4 flex flex-col flex-1">
         <ul
           role="list"
@@ -55,15 +65,19 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ currentUser }) => {
       </nav>
 
       <div className="mt-auto flex items-center justify-center pt-4">
-        <div
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
           className="
                 cursor-pointer
                 hover:opacity-75
                 transition 
             "
+          aria-label="Open settings"
+          disabled={!currentUser}
         >
           <Avatar user={currentUser ?? undefined} />
-        </div>
+        </button>
       </div>
     </div>
   );

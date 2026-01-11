@@ -9,6 +9,7 @@ import clsx from "clsx";
 import { FullConversationType } from "@/app/types";
 import useOtherUser from "@/app/hooks/useOtherUser";
 import Avatar from "@/components/Avatar";
+import GroupAvatar from "@/components/GroupAvatar";
 
 interface ConversationBoxProps {
   data: FullConversationType;
@@ -23,6 +24,8 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
   const session = useSession();
   const router = useRouter();
 
+  const isGroup = !!data.isGroup;
+
   const handleClick = useCallback(() => {
     router.push(`/conversations/${data.id}`);
   }, [data.id, router]);
@@ -36,6 +39,12 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
   const userEmail = useMemo(() => {
     return session?.data?.user?.email;
   }, [session?.data?.user?.email, data.users]);
+
+  const groupUsers = useMemo(() => {
+    const otherUsers = data.users.filter((user) => user.email !== userEmail);
+    const selection = otherUsers.length >= 3 ? otherUsers : data.users;
+    return selection.slice(0, 3);
+  }, [data.users, userEmail]);
 
   const hasSeen = useMemo(() => {
     if (!lastMessage) {
@@ -71,7 +80,11 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
       )}
     >
       <div className="px-3 pt-1 flex items-center justify-center">
-        <Avatar user={otherUser} />
+        {isGroup ? (
+          <GroupAvatar users={groupUsers} />
+        ) : (
+          <Avatar user={otherUser} />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="focus:outline-none ">
@@ -85,7 +98,9 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
           "
           >
             <p className="text-md font-medium text-gray-900">
-              {data.name || otherUser.name}
+              {isGroup
+                ? data.name || "Group chat"
+                : otherUser?.name || otherUser?.email || "Conversation"}
             </p>
             {lastMessage?.createdAt && (
               <p className="text-xs text-gray-400 font-light">

@@ -26,8 +26,8 @@ const useRoutes = () => {
       },
       {
         label: "Logout",
-        href: "#",
-        onClick: () => signOut(),
+        href: "/api/auth/signout?callbackUrl=/",
+        onClick: () => signOut({ callbackUrl: "/" }),
         icon: TbLogout2,
       },
     ],

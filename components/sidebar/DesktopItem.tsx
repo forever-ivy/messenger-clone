@@ -3,12 +3,13 @@
 
 import clsx from "clsx";
 import Link from "next/link";
+import type React from "react";
 
 interface DesktopItemProps {
   label: string;
   href: string;
   icon: any;
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
   active?: boolean;
 }
 
@@ -19,16 +20,17 @@ const DesktopItem: React.FC<DesktopItemProps> = ({
   onClick,
   active,
 }) => {
-  const handleClick = () => {
-    if (onClick) {
-      return onClick();
-    }
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!onClick) return;
+    event.preventDefault();
+    void onClick();
   };
 
   return (
-    <li onClick={handleClick}>
+    <li>
       <Link
         href={href}
+        onClick={handleClick}
         className={clsx(
           `
         group

@@ -3,12 +3,13 @@
 
 import Link from "next/link";
 import clsx from "clsx";
+import type React from "react";
 
 interface MobileItemProps {
   href: string;
   icon: any;
   active?: boolean;
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
 }
 
 const MobileItem: React.FC<MobileItemProps> = ({
@@ -17,10 +18,10 @@ const MobileItem: React.FC<MobileItemProps> = ({
   active,
   onClick,
 }) => {
-  const handleClick = () => {
-    if (onClick) {
-      return onClick();
-    }
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!onClick) return;
+    event.preventDefault();
+    void onClick();
   };
 
   return (
