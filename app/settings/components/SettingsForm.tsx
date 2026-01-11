@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import type { User } from "@prisma/client";
 import Image from "next/image";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { CldUploadButton } from "next-cloudinary";
 import toast from "react-hot-toast";
 import axios from "axios";
 import Input from "@/components/inputs/Input";
@@ -23,6 +22,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   const router = useRouter();
   const [image, setImage] = useState(currentUser.image || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -53,32 +53,70 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     }
   };
 
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      event.target.value = "";
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const payload = await response.json();
+      if (payload?.url) {
+        setImage(payload.url);
+      }
+    } catch (error) {
+      console.error("上传头像失败", error);
+      toast.error("Failed to upload image.");
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+  };
+
   return (
-    <div className="max-w-xl space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="relative h-16 w-16 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
+    <div className="mx-auto w-full max-w-sm space-y-6">
+      <div className="flex justify-center">
+        <label
+          htmlFor="avatar-upload"
+          className="relative h-20 w-20 cursor-pointer overflow-hidden rounded-full border border-gray-200 bg-gray-100 shadow-sm"
+        >
           <Image
             fill
-            sizes="64px"
+            sizes="80px"
             src={image || "/images/placeholder.png"}
             alt="Profile avatar"
             className="object-cover"
           />
-        </div>
-        <CldUploadButton
-          options={{ maxFiles: 1 }}
-          uploadPreset="kbdp9mhb"
-          onSuccess={(result: any) => {
-            const secureUrl = result?.info?.secure_url as string | undefined;
-            if (secureUrl) {
-              setImage(secureUrl);
-            }
-          }}
-        >
-          <Button type="button" secondary>
-            Upload new avatar
-          </Button>
-        </CldUploadButton>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            onChange={handleFileChange}
+            disabled={isUploading}
+          />
+        </label>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -90,7 +128,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
           required
           disabled={isSaving}
         />
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <Button type="submit" disabled={isSaving}>
             Save changes
           </Button>

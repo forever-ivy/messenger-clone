@@ -15,8 +15,8 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Messenger clone",
-  description: "Messenger clone",
+  title: "Messenger",
+  description: "Messenger",
 };
 
 export default function RootLayout({

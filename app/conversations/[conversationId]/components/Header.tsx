@@ -9,6 +9,7 @@ import { HiChevronLeft } from "react-icons/hi";
 import { HiEllipsisHorizontal } from "react-icons/hi2";
 import DetailsDrawer from "./DetailsDrawer";
 import GroupAvatar from "@/components/GroupAvatar";
+import { formatDistanceToNow } from "date-fns";
 
 interface HeaderProps {
   conversation: Conversation & {
@@ -37,7 +38,13 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
       return "Offline";
     }
 
-    return Date.now() - lastActive <= 2 * 60 * 1000 ? "Online" : "Offline";
+    if (Date.now() - lastActive <= 2 * 60 * 1000) {
+      return "Online";
+    }
+
+    return `Last active ${formatDistanceToNow(new Date(lastActive), {
+      addSuffix: true,
+    })}`;
   }, [conversation.isGroup, conversation.users.length, otherUser?.updatedAt]);
 
   if (!conversation.isGroup && !otherUser) {

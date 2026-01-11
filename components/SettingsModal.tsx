@@ -44,29 +44,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const modal = (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
         role="button"
         aria-label="Close settings"
       />
-      <div className="absolute left-1/2 top-1/2 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-gray-200 px-6 py-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
-            <p className="text-sm text-gray-500">
-              Update your profile name and avatar.
-            </p>
-          </div>
+      <div className="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="relative border-b border-gray-100 px-8 py-6 text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Update your profile name and avatar.
+          </p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-gray-400 hover:text-gray-600"
+            className="absolute right-4 top-4 rounded-full p-1 text-gray-400 hover:text-gray-600"
             aria-label="Close settings"
           >
             <HiXMark size={20} />
           </button>
         </div>
-        <div className="px-6 py-6">
+        <div className="px-8 py-8">
           <SettingsForm currentUser={currentUser} onSuccess={onClose} />
         </div>
       </div>
